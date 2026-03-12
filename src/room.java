@@ -12,13 +12,21 @@ public class room {
         this.price = price;
     }
 
+    public String getType() {
+        return type;
+    }
+
     public void displayRoom(roominventory inventory) {
 
-        System.out.println(type + ":");
-        System.out.println("Beds: " + beds);
-        System.out.println("Size: " + size + " sqft");
-        System.out.println("Price per night: " + price);
-        System.out.println("Available Rooms: " + inventory.getAvailability(type));
-        System.out.println();
+        int available = inventory.getAvailability(type);
+
+        if (available > 0) {
+            System.out.println(type + ":");
+            System.out.println("Beds: " + beds);
+            System.out.println("Size: " + size + " sqft");
+            System.out.println("Price per night: " + price);
+            System.out.println("Available: " + available);
+            System.out.println();
+        }
     }
 }
