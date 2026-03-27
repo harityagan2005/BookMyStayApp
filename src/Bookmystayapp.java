@@ -1,5 +1,5 @@
 import java.util.*;
-class InventoryService {
+ class InventoryService {
 
     private Map<String, Integer> inventory = new HashMap<>();
     private Map<String, Integer> roomCounters = new HashMap<>();

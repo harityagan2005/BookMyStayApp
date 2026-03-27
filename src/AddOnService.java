@@ -1,49 +1,86 @@
 import java.util.*;
-class Bookmystayapp {
-    public static void main(String[] args) { System.out.println("Booking Cancellation and Inventory Rollback\n");
+class InventoryService {
 
-        // Inventory storage
-        HashMap<String, Integer> inventory = new HashMap<>();
+    private Map<String, Integer> inventory = new HashMap<>();
+    private Map<String, Integer> roomCounters = new HashMap<>();
 
-        inventory.put("Single", 4);
+    public InventoryService() {
+        inventory.put("Single", 5);
         inventory.put("Double", 3);
         inventory.put("Suite", 2);
 
-        // Stack for rollback
-        Stack<String> releasedRooms = new Stack<>();
+        roomCounters.put("Single", 0);
+        roomCounters.put("Double", 0);
+        roomCounters.put("Suite", 0);
+    }
 
-        // Simulated confirmed reservation
-        String reservationId = "Single-1";
-        String roomType = "Single";
+    public synchronized void allocateRoom(String guest, String roomType) {
 
-        System.out.println("Confirmed Reservation: " + reservationId);
+        int available = inventory.get(roomType);
 
-        // Guest requests cancellation
-        System.out.println("Cancelling reservation: " + reservationId);
+        if (available > 0) {
 
-        // Validation
-        if (reservationId != null) {
+            int roomNumber = roomCounters.get(roomType) + 1;
+            roomCounters.put(roomType, roomNumber);
 
-            // Record released room
-            releasedRooms.push(reservationId);
+            String roomId = roomType + "-" + roomNumber;
 
-            // Restore inventory
-            int available = inventory.get(roomType);
-            inventory.put(roomType, available + 1);
+            inventory.put(roomType, available - 1);
 
-            System.out.println("Reservation cancelled successfully.");
-            System.out.println("Inventory restored for room type: " + roomType);
+            System.out.println("Booking confirmed for Guest: " +
+                    guest + ", Room ID: " + roomId);
+        }
+    }
 
-        } else {
+    public void printInventory() {
+        System.out.println("\nRemaining Inventory:");
+        System.out.println("Single: " + inventory.get("Single"));
+        System.out.println("Double: " + inventory.get("Double"));
+        System.out.println("Suite: " + inventory.get("Suite"));
+    }
+}
 
-            System.out.println("Cancellation failed. Reservation does not exist.");
+class BookingThread extends Thread {
+
+    private InventoryService inventory;
+    private String guest;
+    private String roomType;
+
+    public BookingThread(InventoryService inventory, String guest, String roomType) {
+        this.inventory = inventory;
+        this.guest = guest;
+        this.roomType = roomType;
+    }
+
+    public void run() {
+        inventory.allocateRoom(guest, roomType);
+    }
+}
+
+class Bookmystayapp {
+    public static void main(String[] args) { System.out.println("Concurrent Booking Simulation");
+
+        InventoryService inventory = new InventoryService();
+
+        Thread t1 = new BookingThread(inventory, "Abhi", "Single");
+        Thread t2 = new BookingThread(inventory, "Vanmathi", "Double");
+        Thread t3 = new BookingThread(inventory, "Kural", "Suite");
+        Thread t4 = new BookingThread(inventory, "Subha", "Single");
+
+        t1.start();
+        t2.start();
+        t3.start();
+        t4.start();
+
+        try {
+            t1.join();
+            t2.join();
+            t3.join();
+            t4.join();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
         }
 
-        // Show rollback stack
-        System.out.println("\nReleased Room IDs (Rollback Stack):");
-
-        while (!releasedRooms.isEmpty()) {
-            System.out.println(releasedRooms.pop());
-        }
+        inventory.printInventory();
     }
 }
