@@ -1,19 +1,17 @@
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Stack;
 
 public class roominventory {
 
-    private HashMap<String, Integer> availability;
+    private int singleRoomAvailability = 5;
 
-    public roominventory() {
-        availability = new HashMap<>();
-    }
-
-    public void registerRoomType(String roomType, int count) {
-        availability.put(roomType, count);
-    }
-
+    // Add this method to fix the "cannot find symbol" error
     public int getAvailability(String roomType) {
-        return availability.getOrDefault(roomType, 0);
+        if (roomType.equalsIgnoreCase("Single")) {
+            return singleRoomAvailability;
+        }
+        // Return 0 or throw an exception if the room type isn't recognized
+        return 0;
     }
 }
