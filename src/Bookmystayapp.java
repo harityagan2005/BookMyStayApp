@@ -1,60 +1,86 @@
 import java.util.*;
+class InventoryService {
 
- class BookMyStayApp { public static void validateBooking(String guestName, String roomType, roominventory inventory)
-        throws InvalidBookingException {
+    private Map<String, Integer> inventory = new HashMap<>();
+    private Map<String, Integer> roomCounters = new HashMap<>();
 
-    if (guestName == null || guestName.isEmpty()) {
-        throw new InvalidBookingException("Guest name cannot be empty.");
+    public InventoryService() {
+        inventory.put("Single", 5);
+        inventory.put("Double", 3);
+        inventory.put("Suite", 2);
+
+        roomCounters.put("Single", 0);
+        roomCounters.put("Double", 0);
+        roomCounters.put("Suite", 0);
     }
 
-    int available = inventory.getAvailability(roomType);
+    public synchronized void allocateRoom(String guest, String roomType) {
 
-    if (available == 0) {
-        throw new InvalidBookingException("Invalid or unavailable room type: " + roomType);
+        int available = inventory.get(roomType);
+
+        if (available > 0) {
+
+            int roomNumber = roomCounters.get(roomType) + 1;
+            roomCounters.put(roomType, roomNumber);
+
+            String roomId = roomType + "-" + roomNumber;
+
+            inventory.put(roomType, available - 1);
+
+            System.out.println("Booking confirmed for Guest: " +
+                    guest + ", Room ID: " + roomId);
+        }
     }
 
-    if (available < 0) {
-        throw new InvalidBookingException("Inventory state invalid for room type: " + roomType);
+    public void printInventory() {
+        System.out.println("\nRemaining Inventory:");
+        System.out.println("Single: " + inventory.get("Single"));
+        System.out.println("Double: " + inventory.get("Double"));
+        System.out.println("Suite: " + inventory.get("Suite"));
     }
 }
 
-    public static void main(String[] args) { System.out.println("Booking Validation and Error Handling\n");
+class BookingThread extends Thread {
 
-        roominventory inventory = new roominventory();
+    private InventoryService inventory;
+    private String guest;
+    private String roomType;
 
-        inventory.registerRoomType("Single", 5);
-        inventory.registerRoomType("Double", 3);
-        inventory.registerRoomType("Suite", 2);
+    public BookingThread(InventoryService inventory, String guest, String roomType) {
+        this.inventory = inventory;
+        this.guest = guest;
+        this.roomType = roomType;
+    }
+
+    public void run() {
+        inventory.allocateRoom(guest, roomType);
+    }
+}
+
+public class BookMyStay_App {
+    public static void main(String[] args) { System.out.println("Concurrent Booking Simulation");
+
+        InventoryService inventory = new InventoryService();
+
+        Thread t1 = new BookingThread(inventory, "Abhi", "Single");
+        Thread t2 = new BookingThread(inventory, "Vanmathi", "Double");
+        Thread t3 = new BookingThread(inventory, "Kural", "Suite");
+        Thread t4 = new BookingThread(inventory, "Subha", "Single");
+
+        t1.start();
+        t2.start();
+        t3.start();
+        t4.start();
 
         try {
-
-            String guestName = "Abhi";
-            String roomType = "Single";
-
-            validateBooking(guestName, roomType, inventory);
-
-            System.out.println("Booking request is valid for Guest: " +
-                    guestName + ", Room Type: " + roomType);
-
-        } catch (InvalidBookingException e) {
-
-            System.out.println("Booking failed: " + e.getMessage());
+            t1.join();
+            t2.join();
+            t3.join();
+            t4.join();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
         }
 
-        // Example invalid case
-        try {
-
-            String guestName = "Subha";
-            String roomType = "Deluxe"; // invalid room type
-
-            validateBooking(guestName, roomType, inventory);
-
-            System.out.println("Booking request is valid for Guest: " +
-                    guestName + ", Room Type: " + roomType);
-
-        } catch (InvalidBookingException e) {
-
-            System.out.println("Booking failed: " + e.getMessage());
-        }
+        inventory.printInventory();
     }
 }

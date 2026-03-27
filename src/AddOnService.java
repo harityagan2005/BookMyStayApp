@@ -1,6 +1,5 @@
 import java.util.*;
-
-public class Bookmystayapp {
+class Bookmystayapp {
     public static void main(String[] args) { System.out.println("Booking Cancellation and Inventory Rollback\n");
 
         // Inventory storage
